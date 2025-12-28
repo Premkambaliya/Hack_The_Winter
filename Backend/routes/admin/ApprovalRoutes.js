@@ -12,6 +12,7 @@ import {
   suspendOrganization
 } from "../../controllers/admin/ApprovalController.js";
 
+import authMiddleware from "../../middleware/auth.middleware.js";
 import adminAuthMiddleware from "../../middleware/adminAuth.middleware.js";
 
 const router = express.Router();
@@ -19,25 +20,25 @@ const router = express.Router();
 // ============= VIEW ROUTES (Admin Only) =============
 
 // Get ALL pending approvals (all types combined)
-router.get("/pending/all", adminAuthMiddleware, getAllPendingApprovals);
+router.get("/pending/all", authMiddleware, adminAuthMiddleware, getAllPendingApprovals);
 
 // Get pending approvals by type (hospital, bloodbank, ngo)
-router.get("/pending", adminAuthMiddleware, getPendingApprovals);
+router.get("/pending", authMiddleware, adminAuthMiddleware, getPendingApprovals);
 
 // Get pending hospitals only
-router.get("/pending/hospitals", adminAuthMiddleware, getPendingHospitals);
+router.get("/pending/hospitals", authMiddleware, adminAuthMiddleware, getPendingHospitals);
 
 // Get pending blood banks only
-router.get("/pending/bloodbanks", adminAuthMiddleware, getPendingBloodBanks);
+router.get("/pending/bloodbanks", authMiddleware, adminAuthMiddleware, getPendingBloodBanks);
 
 // Get pending NGOs only
-router.get("/pending/ngos", adminAuthMiddleware, getPendingNgos);
+router.get("/pending/ngos", authMiddleware, adminAuthMiddleware, getPendingNgos);
 
 // Get approval statistics summary
-router.get("/stats", adminAuthMiddleware, getApprovalStats);
+router.get("/stats", authMiddleware, adminAuthMiddleware, getApprovalStats);
 
 // Get organization details by code (for verification before approval)
-router.get("/:id", adminAuthMiddleware, getOrganizationDetails);
+router.get("/:id", authMiddleware, adminAuthMiddleware, getOrganizationDetails);
 
 // ============= ACTION ROUTES (Admin Only) =============
 
@@ -46,20 +47,20 @@ router.get("/:id", adminAuthMiddleware, getOrganizationDetails);
  * Approve a pending organization
  * Body: { organizationCode, approvalRemarks }
  */
-router.post("/approve", adminAuthMiddleware, approveOrganization);
+router.post("/approve", authMiddleware, adminAuthMiddleware, approveOrganization);
 
 /**
  * POST /api/admin/approvals/reject
  * Reject a pending organization
  * Body: { organizationCode, rejectionReason }
  */
-router.post("/reject", adminAuthMiddleware, rejectOrganization);
+router.post("/reject", authMiddleware, adminAuthMiddleware, rejectOrganization);
 
 /**
  * POST /api/admin/approvals/suspend
  * Suspend an organization
  * Body: { organizationCode, suspensionReason }
  */
-router.post("/suspend", adminAuthMiddleware, suspendOrganization);
+router.post("/suspend", authMiddleware, adminAuthMiddleware, suspendOrganization);
 
 export default router;
