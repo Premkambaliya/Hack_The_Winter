@@ -11,6 +11,7 @@ class User {
 
   getCollection() {
     const db = getDB();
+    console.log("db name is", db);
     return db.collection(this.collectionName);
   }
 
