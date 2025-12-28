@@ -67,6 +67,7 @@
 import { useState } from "react";
 import { registerUser } from "../services/authApi";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -87,10 +88,10 @@ export default function Register() {
     e.preventDefault();
     try {
       const res = await registerUser(form);
-      alert(res.data.message);
+      toast.success(res.data.message || "Registration successful!");
       navigate("/login");
     } catch (err) {
-      alert(err.response?.data?.message || "Error");
+      toast.error(err.response?.data?.message || "Registration failed");
     }
   };
 
