@@ -55,6 +55,19 @@ export const createOrganizationUser = async (req, res) => {
 
     console.log(`\n[USER_CREATE_REQUEST] organizationCode: ${organizationCode}, role: ${role}, email: ${email}`);
 
+    // ✅ CRITICAL: Verify admin belongs to the same organization
+    if (req.user.organizationCode !== organizationCode) {
+      console.warn(
+        `[SECURITY_VIOLATION] Admin ${req.user.userCode} from ${req.user.organizationCode} ` +
+        `attempted to create user in ${organizationCode}`
+      );
+      return sendError(
+        res,
+        `You can only create users in your own organization (${req.user.organizationCode})`,
+        403
+      );
+    }
+
     // Validate input
     const validationErrors = validateUserCreationInput(req.body);
     if (validationErrors.length > 0) {
@@ -158,6 +171,19 @@ export const updateOrganizationUser = async (req, res) => {
 
     console.log(`[UPDATE_USER_REQUEST] ${organizationCode} - ${userCode}`);
 
+    // ✅ CRITICAL: Verify admin belongs to the same organization
+    if (req.user.organizationCode !== organizationCode) {
+      console.warn(
+        `[SECURITY_VIOLATION] Admin ${req.user.userCode} from ${req.user.organizationCode} ` +
+        `attempted to update user in ${organizationCode}`
+      );
+      return sendError(
+        res,
+        `You can only update users in your own organization (${req.user.organizationCode})`,
+        403
+      );
+    }
+
     const updateData = { name, role, status };
     const user = await OrganizationUser.update(organizationCode, userCode, updateData);
 
@@ -183,6 +209,19 @@ export const deleteOrganizationUser = async (req, res) => {
     const { organizationCode, userCode } = req.params;
 
     console.log(`[DELETE_USER_REQUEST] ${organizationCode} - ${userCode}`);
+
+    // ✅ CRITICAL: Verify admin belongs to the same organization
+    if (req.user.organizationCode !== organizationCode) {
+      console.warn(
+        `[SECURITY_VIOLATION] Admin ${req.user.userCode} from ${req.user.organizationCode} ` +
+        `attempted to delete user in ${organizationCode}`
+      );
+      return sendError(
+        res,
+        `You can only delete users in your own organization (${req.user.organizationCode})`,
+        403
+      );
+    }
 
     await OrganizationUser.delete(organizationCode, userCode);
 
