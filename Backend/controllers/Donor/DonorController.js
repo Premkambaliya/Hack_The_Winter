@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
-import { DonorCollection } from "../../models/Donor.js";
-import { DonationCollection } from "../../models/Donation.js";
+import { DonorCollection } from "../../models/donor/Donor.js";
+import { DonationCollection } from "../../models/donor/Donation.js";
 
 export const registerDonorForCamp = async (req, res) => {
   try {
