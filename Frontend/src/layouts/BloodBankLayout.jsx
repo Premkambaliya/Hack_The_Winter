@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const navItems = [
   { label: "Dashboard Overview", path: "/bloodbank/overview" },
@@ -36,6 +37,7 @@ const statusBadgeStyles = {
 
 export default function BloodBankLayout() {
   const location = useLocation();
+  const { logout, user } = useAuth();
 
   return (
     <div className="min-h-screen bg-[#fff8f0] text-[#331c1b] font-['Nunito']">
@@ -108,7 +110,10 @@ export default function BloodBankLayout() {
                 >
                   View Profile
                 </Link>
-                <button className="rounded-full bg-linear-to-r from-[#ff4d6d] to-[#ff8fa3] px-6 py-2 text-sm font-semibold text-white shadow-[0_15px_35px_rgba(255,77,109,0.35)] transition hover:scale-105">
+                <button 
+                  onClick={logout}
+                  className="rounded-full bg-linear-to-r from-[#ff4d6d] to-[#ff8fa3] px-6 py-2 text-sm font-semibold text-white shadow-[0_15px_35px_rgba(255,77,109,0.35)] transition hover:scale-105"
+                >
                   Logout
                 </button>
               </div>

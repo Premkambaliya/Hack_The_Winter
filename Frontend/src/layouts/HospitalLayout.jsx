@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const navItems = [
   { label: "Dashboard Overview", path: "/hospital/overview" },
@@ -26,6 +27,7 @@ const statusBadgeStyles = {
 
 export default function HospitalLayout() {
   const location = useLocation();
+  const { logout, user } = useAuth();
 
   return (
     <div className="min-h-screen bg-[#fff6f2] text-[#2d1617] font-['Nunito']">
@@ -98,7 +100,10 @@ export default function HospitalLayout() {
                 >
                   View Profile
                 </Link>
-                <button className="rounded-full bg-linear-to-r from-[#8f0f1a] to-[#c62832] px-6 py-2 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(143,15,26,0.35)] transition hover:scale-105">
+                <button 
+                  onClick={logout}
+                  className="rounded-full bg-linear-to-r from-[#8f0f1a] to-[#c62832] px-6 py-2 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(143,15,26,0.35)] transition hover:scale-105"
+                >
                   Logout
                 </button>
               </div>
