@@ -2,7 +2,7 @@ import express from "express";
 import {
 	registerDonorForCamp,
 	recordDonation
-} from "../controllers/Donor/DonorController.js";
+} from "../../controllers/Donor/DonorController.js";
 
 const router = express.Router();
 

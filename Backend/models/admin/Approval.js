@@ -1,7 +1,7 @@
 import { getDB } from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
-import User from "../User.js";
+import User from "../ngo/User.js";
 import { generateUserCode } from "../../utils/codeGenerator.js";
 
 export class Approval {

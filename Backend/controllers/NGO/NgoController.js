@@ -1,6 +1,6 @@
-import NgoCamp from "../../models/NgoCamp.js";
-import CampSlot from "../../models/CampSlot.js";
-import CampRegistration from "../../models/CampRegistration.js";
+import NgoCamp from "../../models/ngo/NgoCamp.js";
+import CampSlot from "../../models/ngo/CampSlot.js";
+import CampRegistration from "../../models/ngo/CampRegistration.js";
 
 // ============= VALIDATORS =============
 

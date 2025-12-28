@@ -3,9 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 // Import routes
-import authRoutes from "./routes/AuthRoutes.js";
-import ngoRoutes from "./routes/NgoRoutes.js";
-import donorRoutes from "./routes/DonorRoutes.js";
+import authRoutes from "./routes/auth/AuthRoutes.js";
+import ngoRoutes from "./routes/ngo/NgoRoutes.js";
+import donorRoutes from "./routes/donor/DonorRoutes.js";
 import adminAuthRoutes from "./routes/admin/AdminAuthRoutes.js";
 import approvalRoutes from "./routes/admin/ApprovalRoutes.js";
 import hospitalRoutes from "./routes/admin/HospitalRoutes.js";

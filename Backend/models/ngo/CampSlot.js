@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { getDB } from "../config/db.js";
+import { getDB } from "../../config/db.js";
 
 /**
  * CampSlot Model - MongoDB Native
