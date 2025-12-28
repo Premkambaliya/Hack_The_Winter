@@ -48,41 +48,51 @@
 import { useState } from "react";
 import { loginUser } from "../services/authApi";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const res = await loginUser({ email, password });
 
+      // Backend returns: { success, message, token, user: { role, email, name, ... } }
+      const { token, user } = res.data;
+
       // 🔴 ROLE CHECK
-      if (res.data.role !== role) {
-        alert("Role mismatch! Please select correct role.");
+      if (user.role !== role) {
+        toast.error("Role mismatch! Please select correct role.");
+        setLoading(false);
         return;
       }
 
-      // ✅ SAVE AUTH DATA
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("role", res.data.role);
+      // ✅ SAVE AUTH DATA using AuthContext
+      login(user, token);
 
-      alert("Login successful");
+      toast.success("Login successful! Redirecting...");
 
       // 🔀 ROLE-BASED REDIRECT
-      if (res.data.role === "admin") navigate("/admin");
-      else if (res.data.role === "ngo") navigate("/ngo");
-      else if (res.data.role === "bloodbank") navigate("/bloodbank");
-      else if (res.data.role === "hospital") navigate("/hospital");
+      if (user.role === "admin") navigate("/admin");
+      else if (user.role === "ngo") navigate("/ngo");
+      else if (user.role === "bloodbank") navigate("/bloodbank");
+      else if (user.role === "hospital") navigate("/hospital");
       else navigate("/user");
 
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
+      console.error("Login error:", err);
+      toast.error(err.response?.data?.message || "Login failed");
+      setLoading(false);
     }
   };
 
@@ -123,9 +133,10 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full bg-slate-700 text-white py-3 rounded-md font-semibold hover:bg-slate-800 transition"
+            disabled={loading}
+            className="w-full bg-slate-700 text-white py-3 rounded-md font-semibold hover:bg-slate-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
