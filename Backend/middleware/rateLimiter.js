@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { MemoryStore } from "express-rate-limit";
 
 // ============= LOGIN RATE LIMITER =============
 // Prevents brute force attacks by limiting login attempts
@@ -11,10 +11,6 @@ export const loginLimiter = rateLimit({
   skip: (req, res) => {
     // Don't rate limit if it's a GET request
     return req.method === "GET";
-  },
-  keyGenerator: (req, res) => {
-    // Use IP address as the key (you can also use email if available)
-    return req.ip || req.connection.remoteAddress;
   },
   handler: (req, res) => {
     res.status(429).json({
@@ -32,10 +28,7 @@ export const apiLimiter = rateLimit({
   max: 100, // Max 100 requests per windowMs
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req, res) => {
-    return req.ip || req.connection.remoteAddress;
-  }
+  legacyHeaders: false
 });
 
 // ============= REGISTER RATE LIMITER =============
@@ -46,9 +39,6 @@ export const registerLimiter = rateLimit({
   message: "Too many accounts created from this IP, please try again after an hour.",
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req, res) => {
-    return req.ip || req.connection.remoteAddress;
-  },
   handler: (req, res) => {
     res.status(429).json({
       success: false,
@@ -65,8 +55,5 @@ export const strictLimiter = rateLimit({
   max: 3, // Max 3 requests per minute
   message: "Too many requests. Please try again later.",
   standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req, res) => {
-    return req.ip || req.connection.remoteAddress;
-  }
+  legacyHeaders: false
 });
