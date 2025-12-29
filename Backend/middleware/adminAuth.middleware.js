@@ -4,41 +4,54 @@ import Admin from "../models/admin/Admin.js";
 /**
  * Admin Authentication Middleware
  * ✅ Verifies JWT token is from admin
- * ✅ Checks admin still exists and is active
+ * ✅ Checks admin still exists and is active in admins collection
  * ✅ Used on all admin endpoints
  */
 const adminAuthMiddleware = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-
-    if (!token) {
+    // Check if authMiddleware has already verified the token
+    if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: "No admin token provided"
+        message: "No token provided"
       });
     }
 
-    // Verify JWT signature
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "admin_jwt_secret"
-    );
+    console.log(`[ADMIN_AUTH_MIDDLEWARE] Token verified for admin: ${req.user.email}`);
 
-    // ✅ CRITICAL: Verify admin still exists and is active
-    const admin = await Admin.findById(decoded.id);
-
-    if (!admin || !admin.isActive || admin.role !== "ADMIN") {
+    // ✅ Check if role is ADMIN in the token itself
+    if (req.user.role !== "ADMIN") {
+      console.log(`[ADMIN_AUTH_MIDDLEWARE] User role is not ADMIN: ${req.user.role}`);
       return res.status(403).json({
         success: false,
         message: "Admin not authorized"
       });
     }
 
-    // Attach admin data to request
+    // ✅ CRITICAL: Verify admin exists in admins collection and is active
+    let admin = await Admin.findByEmail(req.user.email);
+    
+    if (!admin) {
+      console.log(`[ADMIN_AUTH_MIDDLEWARE] Admin not found in database for email: ${req.user.email}`);
+      return res.status(403).json({
+        success: false,
+        message: "Admin not authorized"
+      });
+    }
+    
+    // Verify admin is active
+    if (!admin.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Admin account is inactive"
+      });
+    }
+
+    // Update request with admin info from database
     req.user = {
-      id: decoded.id,
-      email: decoded.email,
-      adminCode: decoded.adminCode,
+      id: admin._id,
+      email: admin.email,
+      adminCode: admin.adminCode,
       role: "ADMIN",
       permissions: admin.permissions
     };
@@ -46,6 +59,7 @@ const adminAuthMiddleware = async (req, res, next) => {
     next();
 
   } catch (error) {
+    console.error("[ADMIN_AUTH_MIDDLEWARE] Error:", error);
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({
         success: false,

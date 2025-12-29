@@ -8,6 +8,13 @@ import ngoRoutes from "./routes/ngo/NgoRoutes.js";
 import donorRoutes from "./routes/donor/DonorRoutes.js";
 import adminAuthRoutes from "./routes/admin/AdminAuthRoutes.js";
 import approvalRoutes from "./routes/admin/ApprovalRoutes.js";
+import hospitalRoutes from "./routes/admin/HospitalRoutes.js";
+import bloodBankRoutes from "./routes/admin/BloodBankRoutes.js";
+import adminNgoRoutes from "./routes/admin/NgoRoutes.js";
+import bloodStockRoutes from "./routes/admin/BloodStockRoutes.js";
+import alertRoutes from "./routes/admin/AlertRoutes.js";
+import auditRoutes from "./routes/admin/AuditRoutes.js";
+import dashboardRoutes from "./routes/admin/DashboardRoutes.js";
 import orgRegistrationRoutes from "./routes/organization/OrganizationRegistrationRoutes.js";
 import orgUsersRoutes from "./routes/organization/OrganizationUsersRoutes.js";
 
@@ -60,6 +67,13 @@ app.use("/api/auth/org", orgRegistrationRoutes);  // ← Organization registrati
 app.use("/api/auth", authRoutes);
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/approvals", approvalRoutes);
+app.use("/api/admin/hospitals", hospitalRoutes);
+app.use("/api/admin/bloodbanks", bloodBankRoutes);
+app.use("/api/admin/ngos", adminNgoRoutes);
+app.use("/api/admin/blood-stock", bloodStockRoutes);
+app.use("/api/admin/alerts", alertRoutes);
+app.use("/api/admin/logs", auditRoutes);
+app.use("/api/admin/dashboard", dashboardRoutes);
 app.use("/api/organization-users", orgUsersRoutes);  // ← Organization users
 app.use("/api/ngo", authMiddleware, ngoRoutes);
 app.use("/api/donor", donorRoutes);
