@@ -1,4 +1,4 @@
-import Audit from "../../models/Audit.js";
+import Audit from "../../models/admin/Audit.js";
 
 // ============= GET ALL AUDIT LOGS (Admin Only) =============
 /**

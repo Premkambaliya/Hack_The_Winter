@@ -8,8 +8,8 @@ import {
   getRecentActivity,
   getSystemHealth
 } from "../../controllers/admin/DashboardController.js";
-import { authMiddleware } from "../../middleware/auth.middleware.js";
-import { adminAuthMiddleware } from "../../middleware/adminAuth.middleware.js";
+import authMiddleware from "../../middleware/auth.middleware.js";
+import adminAuthMiddleware from "../../middleware/adminAuth.middleware.js";
 
 const router = express.Router();
 

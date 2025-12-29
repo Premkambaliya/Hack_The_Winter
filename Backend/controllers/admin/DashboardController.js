@@ -1,4 +1,4 @@
-import Dashboard from "../../models/Dashboard.js";
+import Dashboard from "../../models/admin/Dashboard.js";
 
 /**
  * Dashboard Controller

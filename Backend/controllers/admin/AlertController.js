@@ -1,4 +1,4 @@
-import Alert from "../../models/Alert.js";
+import Alert from "../../models/admin/Alert.js";
 
 // ============= CREATE ALERT (System/Admin) =============
 /**
