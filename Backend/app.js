@@ -17,6 +17,8 @@ import auditRoutes from "./routes/admin/AuditRoutes.js";
 import dashboardRoutes from "./routes/admin/DashboardRoutes.js";
 import orgRegistrationRoutes from "./routes/organization/OrganizationRegistrationRoutes.js";
 import orgUsersRoutes from "./routes/organization/OrganizationUsersRoutes.js";
+import bloodBankNgoDriveRoutes from "./routes/admin/BloodBankNgoDriveRoutes.js";
+import hospitalBloodRequestRoutes from "./routes/admin/HospitalBloodRequestRoutes.js";
 
 
 // Import middleware
@@ -65,7 +67,7 @@ app.get("/", (req, res) => {
 // API routes
 app.use("/api/auth/org", orgRegistrationRoutes);  // ← Organization registration
 app.use("/api/auth", authRoutes);
-app.use("/api/superadmin/auth", adminAuthRoutes);
+app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/approvals", approvalRoutes);
 app.use("/api/admin/hospitals", hospitalRoutes);
 app.use("/api/admin/bloodbanks", bloodBankRoutes);
@@ -74,6 +76,8 @@ app.use("/api/admin/blood-stock", bloodStockRoutes);
 app.use("/api/admin/alerts", alertRoutes);
 app.use("/api/admin/logs", auditRoutes);
 app.use("/api/admin/dashboard", dashboardRoutes);
+app.use("/api/admin/drives", bloodBankNgoDriveRoutes);
+app.use("/api/admin/requests", hospitalBloodRequestRoutes);
 app.use("/api/organization-users", orgUsersRoutes);  // ← Organization users
 app.use("/api/ngo", authMiddleware, ngoRoutes);
 app.use("/api/donor", donorRoutes);
