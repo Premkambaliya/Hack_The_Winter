@@ -9,6 +9,8 @@ export default function SlotManagement() {
     selectedCampId,
     setSelectedCampId,
     createSlot,
+    loading,
+    error,
   } = useNgoData();
 
   const [slotForm, setSlotForm] = useState({
@@ -26,7 +28,14 @@ export default function SlotManagement() {
 
   const filteredSlots = useMemo(() => {
     if (!selectedCampId) return slots;
-    return slots.filter((slot) => slot.campId === selectedCampId);
+    const filtered = slots.filter((slot) => {
+      const slotCampId = typeof slot.campId === 'object' && slot.campId._id ? slot.campId._id : slot.campId;
+      const match = slotCampId === selectedCampId;
+      console.log(`[SLOT_FILTER] Checking slot: campId=${slotCampId} vs selectedCampId=${selectedCampId} => ${match}`);
+      return match;
+    });
+    console.log(`[SLOT_FILTER] Filtered ${filtered.length} slots from ${slots.length} total`);
+    return filtered;
   }, [slots, selectedCampId]);
 
   const aggregate = useMemo(() => {
@@ -50,11 +59,13 @@ export default function SlotManagement() {
     setSlotForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!slotForm.campId) return;
-    createSlot(slotForm);
-    setSlotForm((prev) => ({ ...prev, slotTime: "", maxDonors: "" }));
+    const result = await createSlot(slotForm);
+    if (result) {
+      setSlotForm((prev) => ({ ...prev, slotTime: "", maxDonors: "" }));
+    }
   };
 
   return (
@@ -76,6 +87,11 @@ export default function SlotManagement() {
             onSubmit={handleSubmit}
             className="flex flex-wrap gap-3 rounded-3xl border border-[#ffd1df] bg-[#fff7f9] p-4"
           >
+            {error && (
+              <div className="w-full rounded-2xl bg-red-50 border border-red-200 p-3 mb-2">
+                <p className="text-xs text-red-700 font-semibold">{error}</p>
+              </div>
+            )}
             <select
               required
               name="campId"
@@ -109,9 +125,10 @@ export default function SlotManagement() {
             />
             <button
               type="submit"
-              className="rounded-full bg-linear-to-r from-[#ff4d6d] to-[#ff7b9c] px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+              disabled={loading}
+              className="rounded-full bg-linear-to-r from-[#ff4d6d] to-[#ff7b9c] px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Add Slot
+              {loading ? "Adding..." : "Add Slot"}
             </button>
           </form>
         </div>

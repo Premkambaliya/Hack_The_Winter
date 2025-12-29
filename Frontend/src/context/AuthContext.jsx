@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const AuthContext = createContext(null);
+const   AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -39,17 +39,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    setToken(null);
-    setUser(null);
+    console.log("[LOGOUT] Starting logout process");
     
-    // Clear localStorage
+    // Clear localStorage first
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("email");
     localStorage.removeItem("name");
+    console.log("[LOGOUT] Cleared localStorage");
     
-    // Redirect to login
-    navigate("/login");
+    // Update state
+    setToken(null);
+    setUser(null);
+    console.log("[LOGOUT] Cleared state");
+    
+    // Use hard redirect to bypass ProtectedRoute check
+    console.log("[LOGOUT] Redirecting to /organization");
+    window.location.href = "/organization";
   };
 
   const isAuthenticated = () => {

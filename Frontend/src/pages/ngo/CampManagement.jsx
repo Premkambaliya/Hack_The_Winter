@@ -33,7 +33,7 @@ const initialFormState = {
 
 export default function CampManagement() {
   const navigate = useNavigate();
-  const { camps, createCamp, updateCamp, deleteCamp, setSelectedCampId } =
+  const { camps, createCamp, updateCamp, deleteCamp, setSelectedCampId, loading, error } =
     useNgoData();
   const [campForm, setCampForm] = useState(initialFormState);
   const [modalCampId, setModalCampId] = useState(null);
@@ -51,9 +51,9 @@ export default function CampManagement() {
     setCampForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const nextCamp = createCamp(campForm);
+    const nextCamp = await createCamp(campForm);
     if (nextCamp) {
       setCampForm(initialFormState);
       navigate("/ngo/dashboard/slots");
@@ -91,24 +91,26 @@ export default function CampManagement() {
     setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleEditSubmit = (event) => {
+  const handleEditSubmit = async (event) => {
     event.preventDefault();
     if (!modalCampId) return;
-    updateCamp(modalCampId, {
+    const result = await updateCamp(modalCampId, {
       ...editForm,
       expectedDonors: Number(editForm.expectedDonors || 0),
     });
-    closeModal();
+    if (result) {
+      closeModal();
+    }
   };
 
   const handleDelete = (campId) => {
     setConfirmingDelete(campId);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (confirmingDelete) {
-      deleteCamp(confirmingDelete);
-      if (modalCampId === confirmingDelete) {
+      const result = await deleteCamp(confirmingDelete);
+      if (result && modalCampId === confirmingDelete) {
         closeModal();
       }
       setConfirmingDelete(null);
@@ -128,6 +130,13 @@ export default function CampManagement() {
             New Blood Donation Camp
           </h3>
         </header>
+
+        {error && (
+          <div className="mt-4 rounded-2xl bg-red-50 border border-red-200 p-4">
+            <p className="text-sm text-red-700 font-semibold">{error}</p>
+          </div>
+        )}
+
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           {formFields.map((field) => (
             <label
@@ -158,9 +167,10 @@ export default function CampManagement() {
           <div className="flex flex-wrap gap-3 pt-2">
             <button
               type="submit"
-              className="flex-1 rounded-full bg-linear-to-r from-[#ff4d6d] to-[#ff7b9c] px-5 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white shadow-[0_18px_45px_rgba(255,77,109,0.35)]"
+              disabled={loading}
+              className="flex-1 rounded-full bg-linear-to-r from-[#ff4d6d] to-[#ff7b9c] px-5 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white shadow-[0_18px_45px_rgba(255,77,109,0.35)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit Camp
+              {loading ? "Creating..." : "Submit Camp"}
             </button>
             <button
               type="button"

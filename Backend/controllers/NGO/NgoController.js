@@ -1,6 +1,7 @@
 import NgoCamp from "../../models/ngo/NgoCamp.js";
 import CampSlot from "../../models/ngo/CampSlot.js";
 import CampRegistration from "../../models/ngo/CampRegistration.js";
+import { ObjectId } from "mongodb";
 
 // ============= VALIDATORS =============
 
@@ -89,20 +90,22 @@ const sendValidationError = (res, errors = []) => {
  */
 export const createCamp = async (req, res) => {
   try {
-    // Check if user is NGO
-    if (req.user.role !== "ngo") {
-      return sendError(res, "Only NGO can create camps", 403);
+    // Check if user is ADMIN
+    if (req.user.role !== "ADMIN") {
+      return sendError(res, "Only ADMIN can create camps", 403);
     }
 
     // Validate input
     const validationErrors = validateCampInput(req.body);
     if (validationErrors.length > 0) {
+      console.warn("[CREATE_CAMP] Validation errors:", validationErrors);
+      console.warn("[CREATE_CAMP] Received data:", req.body);
       return sendValidationError(res, validationErrors);
     }
 
     // Create camp
     const camp = await NgoCamp.create({
-      ngoId: req.user.id,
+      ngoId: new ObjectId(req.user.userId),
       campName: req.body.campName,
       location: req.body.location,
       city: req.body.city || "",
@@ -128,7 +131,9 @@ export const createCamp = async (req, res) => {
  */
 export const getMyCamps = async (req, res) => {
   try {
-    const camps = await NgoCamp.findByNgoId(req.user.id);
+    console.log("[getMyCamps] User ID:", req.user.userId);
+    const camps = await NgoCamp.findByNgoId(req.user.userId);
+    console.log("[getMyCamps] Retrieved camps:", camps.length);
     sendSuccess(res, camps, "Camps retrieved successfully");
   } catch (error) {
     console.error("Get my camps error:", error);
@@ -168,7 +173,7 @@ export const updateCamp = async (req, res) => {
     }
 
     // Check if user owns this camp
-    if (camp.ngoId.toString() !== req.user.id) {
+    if (camp.ngoId.toString() !== req.user.userId) {
       return sendError(res, "You are not authorized to update this camp", 403);
     }
 
@@ -201,7 +206,7 @@ export const deleteCamp = async (req, res) => {
     }
 
     // Check if user owns this camp
-    if (camp.ngoId.toString() !== req.user.id) {
+    if (camp.ngoId.toString() !== req.user.userId) {
       return sendError(res, "You are not authorized to delete this camp", 403);
     }
 
@@ -240,13 +245,13 @@ export const createSlot = async (req, res) => {
     }
 
     // Check if user owns this camp
-    if (camp.ngoId.toString() !== req.user.id) {
+    if (camp.ngoId.toString() !== req.user.userId) {
       return sendError(res, "You are not authorized to add slot to this camp", 403);
     }
 
-    // Create slot
+    // Create slot with campId as ObjectId
     const slot = await CampSlot.create({
-      campId: req.body.campId,
+      campId: new ObjectId(req.body.campId),
       slotTime: req.body.slotTime,
       maxDonors: req.body.maxDonors
     });
@@ -292,7 +297,7 @@ export const updateSlot = async (req, res) => {
 
     // Check camp ownership
     const camp = await NgoCamp.findById(slot.campId.toString());
-    if (camp.ngoId.toString() !== req.user.id) {
+    if (camp.ngoId.toString() !== req.user.userId) {
       return sendError(res, "You are not authorized to update this slot", 403);
     }
 
@@ -318,7 +323,7 @@ export const deleteSlot = async (req, res) => {
 
     // Check camp ownership
     const camp = await NgoCamp.findById(slot.campId.toString());
-    if (camp.ngoId.toString() !== req.user.id) {
+    if (camp.ngoId.toString() !== req.user.userId) {
       return sendError(res, "You are not authorized to delete this slot", 403);
     }
 
@@ -352,7 +357,7 @@ export const registerDonorToSlot = async (req, res) => {
     }
 
     const { campId, slotId, bloodGroup } = req.body;
-    const donorId = req.user.id;
+    const donorId = req.user.userId;
 
     // Check if camp exists
     const camp = await NgoCamp.findById(campId);
@@ -409,7 +414,7 @@ export const registerDonorToSlot = async (req, res) => {
  */
 export const getMyRegistrations = async (req, res) => {
   try {
-    const registrations = await CampRegistration.findByDonorId(req.user.id);
+    const registrations = await CampRegistration.findByDonorId(req.user.userId);
     sendSuccess(res, registrations, "Registrations retrieved successfully");
   } catch (error) {
     console.error("Get my registrations error:", error);
@@ -430,7 +435,7 @@ export const getCampRegistrations = async (req, res) => {
     }
 
     // Check if user owns this camp
-    if (camp.ngoId.toString() !== req.user.id) {
+    if (camp.ngoId.toString() !== req.user.userId) {
       return sendError(res, "You are not authorized to view this camp's registrations", 403);
     }
 
@@ -455,7 +460,7 @@ export const cancelRegistration = async (req, res) => {
     }
 
     // Check if donor owns this registration
-    if (registration.donorId.toString() !== req.user.id) {
+    if (registration.donorId.toString() !== req.user.userId) {
       return sendError(res, "You are not authorized to cancel this registration", 403);
     }
 

@@ -28,31 +28,31 @@ router.use(authMiddleware);
 
 // ============= CAMP ROUTES =============
 
-// Create camp (NGO only)
-router.post("/camp", roleMiddleware(["ngo"]), createCamp);
+// Create camp (ADMIN only)
+router.post("/camp", roleMiddleware(["ADMIN"]), createCamp);
 
-// Get all my camps (NGO only)
-router.get("/camp", roleMiddleware(["ngo"]), getMyCamps);
+// Get all my camps (ADMIN only)
+router.get("/camp", roleMiddleware(["ADMIN"]), getMyCamps);
 
 // Get camp by ID
 router.get("/camp/:campId", getCampById);
 
 // Update camp (NGO owner only)
-router.put("/camp/:campId", roleMiddleware(["ngo"]), updateCamp);
+router.put("/camp/:campId", roleMiddleware(["ngo","ADMIN"]), updateCamp);
 
 // Delete camp (NGO owner only)
-router.delete("/camp/:campId", roleMiddleware(["ngo"]), deleteCamp);
+router.delete("/camp/:campId", roleMiddleware(["ngo","ADMIN"]), deleteCamp);
 
 // ============= SLOT ROUTES =============
 
 // Create slot for camp (NGO owner only)
-router.post("/slot", roleMiddleware(["ngo"]), createSlot);
+router.post("/slot", roleMiddleware(["ngo","ADMIN"]), createSlot);
 
 // Get all slots for a camp
 router.get("/camp/:campId/slots", getSlotsByCamp);
 
 // Update slot (NGO owner only)
-router.put("/slot/:slotId", roleMiddleware(["ngo"]), updateSlot);
+router.put("/slot/:slotId", roleMiddleware(["ngo","ADMIN"]), updateSlot);
 
 // Delete slot (NGO owner only)
 router.delete("/slot/:slotId", roleMiddleware(["ngo"]), deleteSlot);

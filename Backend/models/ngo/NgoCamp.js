@@ -48,11 +48,16 @@ class NgoCamp {
   // FIND all camps by NGO ID
   static async findByNgoId(ngoId) {
     const db = getDB();
+    console.log("[NgoCamp.findByNgoId] Searching for camps with ngoId:", ngoId, "Type:", typeof ngoId);
+    
     const camps = await db
       .collection("ngoCamps")
       .find({ ngoId: new ObjectId(ngoId) })
       .sort({ createdAt: -1 })
       .toArray();
+    
+    console.log("[NgoCamp.findByNgoId] Found camps:", camps.length);
+    
     return camps.map(camp => new NgoCamp(camp));
   }
 

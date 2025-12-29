@@ -31,7 +31,6 @@ const validateRegistrationInput = (data) => {
   // Admin Details
   if (!data.adminName) errors.push("Admin name is required");
   if (!data.adminEmail) errors.push("Admin email is required");
-  if (!data.adminPassword) errors.push("Admin password is required");
   
   // Email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,11 +39,6 @@ const validateRegistrationInput = (data) => {
   }
   if (data.adminEmail && !emailRegex.test(data.adminEmail)) {
     errors.push("Invalid admin email format");
-  }
-  
-  // Password strength
-  if (data.adminPassword && data.adminPassword.length < 8) {
-    errors.push("Admin password must be at least 8 characters");
   }
   
   return errors;
@@ -88,8 +82,7 @@ export const registerOrganization = async (req, res) => {
       licenseNumber,
       contactPerson,
       adminName,
-      adminEmail,
-      adminPassword
+      adminEmail
     } = req.body;
 
     // Validate input
@@ -125,9 +118,6 @@ export const registerOrganization = async (req, res) => {
     // ✅ Generate registrationCode
     const registrationCode = await generateRegistrationCode();
 
-    // Hash admin password (will be used later when org is approved)
-    const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
-
     // Create organization document
     const organizationData = {
       organizationCode,        // ← Auto-generated
@@ -156,7 +146,6 @@ export const registerOrganization = async (req, res) => {
       // Admin info (will create user on approval)
       adminName,
       adminEmail: adminEmail.toLowerCase(),
-      adminPassword: hashedAdminPassword,
       
       // Status
       status: "PENDING"

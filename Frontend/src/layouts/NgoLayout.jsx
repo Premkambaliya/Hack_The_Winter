@@ -14,7 +14,7 @@ const navItems = [
 const ngoProfile = {
   name: "MetroCare Foundation",
   region: "Mumbai · Western Cluster",
-  hotline: "+91 98765 43210",
+  hotline: "+91 95123 75141",
 };
 
 function NgoShell() {
