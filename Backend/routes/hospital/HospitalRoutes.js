@@ -27,6 +27,13 @@ router.get("/stats", HospitalController.getHospitalStats);
 router.get("/stats/by-city", HospitalController.getHospitalsByCity);
 
 /**
+ * @route   GET /api/hospitals
+ * @desc    Get all hospitals with filters
+ * @access  Public
+ */
+router.get("/", HospitalController.getAllHospitals);
+
+/**
  * @route   GET /api/hospitals/nearby
  * @desc    Get nearby hospitals (geospatial query)
  * @access  Public
@@ -39,13 +46,6 @@ router.get("/nearby", HospitalController.getNearbyHospitals);
  * @access  Public
  */
 router.get("/:id", HospitalController.getHospitalById);
-
-/**
- * @route   GET /api/hospitals
- * @desc    Get all hospitals with filters
- * @access  Public
- */
-router.get("/", HospitalController.getAllHospitals);
 
 /**
  * @route   PUT /api/hospitals/:id
