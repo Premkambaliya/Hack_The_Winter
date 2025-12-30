@@ -128,15 +128,17 @@ export const updateBloodStock = async (req, res) => {
 
     // Get updated stock
     const updatedStock = await BloodStock.findByBloodBankId(bloodBankId);
+    const updatedGroup = updatedStock.bloodStock[bloodGroup];
 
     return res.status(200).json({
       success: true,
       message: "Blood stock updated successfully",
       data: {
         bloodGroup,
-        unitsNow: updatedStock.bloodStock[bloodGroup].units,
-        status: getStockStatus(updatedStock.bloodStock[bloodGroup].units),
-        totalUnitsAvailable: updatedStock.totalUnitsAvailable
+        unitsNow: updatedGroup.units,
+        status: getStockStatus(updatedGroup.units),
+        totalUnitsAvailable: updatedStock.totalUnitsAvailable,
+        lastUpdated: updatedGroup.lastUpdated
       }
     });
   } catch (error) {

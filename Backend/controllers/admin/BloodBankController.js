@@ -1,5 +1,6 @@
 import BloodBank from "../../models/admin/BloodBank.js";
 import BloodBankAdminAction from "../../models/admin/BloodBankAdminAction.js";
+import BloodStock from "../../models/admin/BloodStock.js";
 
 /**
  * BloodBankController
@@ -176,19 +177,42 @@ export const getBloodStock = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const stock = await BloodBank.getBloodStock(id);
-
-    if (!stock) {
+    const bloodBank = await BloodBank.findById(id);
+    if (!bloodBank) {
       return res.status(404).json({
         success: false,
         message: "Blood bank not found"
       });
     }
 
+    let bloodStockDocument = await BloodStock.findByBloodBankId(id);
+    if (!bloodStockDocument) {
+      bloodStockDocument = await BloodStock.create(id, bloodBank.organizationCode);
+    }
+
+    const formattedStock = {};
+    Object.entries(bloodStockDocument.bloodStock || {}).forEach(([group, info]) => {
+      formattedStock[group] = {
+        units: info?.units ?? 0,
+        lastUpdated: info?.lastUpdated || bloodStockDocument.lastStockUpdateAt,
+        updatedBy: info?.updatedBy || "system",
+        status: getStockStatus(info?.units ?? 0)
+      };
+    });
+
     return res.status(200).json({
       success: true,
       message: "Blood stock retrieved successfully",
-      data: stock
+      data: {
+        bloodBankId: bloodBank._id,
+        organizationCode: bloodBank.organizationCode,
+        name: bloodBank.name,
+        bloodStock: formattedStock,
+        totalUnitsAvailable:
+          bloodStockDocument.totalUnitsAvailable ??
+          Object.values(formattedStock).reduce((sum, entry) => sum + entry.units, 0),
+        lastUpdatedAt: bloodStockDocument.lastStockUpdateAt
+      }
     });
   } catch (error) {
     return res.status(500).json({
@@ -204,6 +228,7 @@ export const updateBloodStock = async (req, res) => {
   try {
     const { id } = req.params;
     const { bloodGroup, units } = req.body;
+    const updatedBy = req.user?.userCode || "admin-panel";
 
     if (!bloodGroup || units === undefined) {
       return res.status(400).json({
@@ -220,18 +245,57 @@ export const updateBloodStock = async (req, res) => {
       });
     }
 
-    const success = await BloodBank.updateBloodStock(id, bloodGroup, parseInt(units));
-
-    if (!success) {
-      return res.status(404).json({
+    const parsedUnits = Number(units);
+    if (Number.isNaN(parsedUnits) || parsedUnits < 0) {
+      return res.status(400).json({
         success: false,
-        message: "Blood bank not found or update failed"
+        message: "Units must be a non-negative number"
       });
     }
 
+    const bloodBank = await BloodBank.findById(id);
+    if (!bloodBank) {
+      return res.status(404).json({
+        success: false,
+        message: "Blood bank not found"
+      });
+    }
+
+    let bloodStockDocument = await BloodStock.findByBloodBankId(id);
+    if (!bloodStockDocument) {
+      bloodStockDocument = await BloodStock.create(id, bloodBank.organizationCode);
+    }
+
+    const success = await BloodStock.updateBloodGroupUnits(
+      id,
+      bloodGroup,
+      parsedUnits,
+      updatedBy
+    );
+
+    if (!success) {
+      return res.status(500).json({
+        success: false,
+        message: "Error updating blood stock"
+      });
+    }
+
+    // Update metadata on blood bank record (no embedded stock)
+    await BloodBank.touchStockTimestamp(id);
+
+    const updatedStock = await BloodStock.findByBloodBankId(id);
+    const updatedGroup = updatedStock?.bloodStock?.[bloodGroup];
+
     return res.status(200).json({
       success: true,
-      message: "Blood stock updated successfully"
+      message: "Blood stock updated successfully",
+      data: {
+        bloodGroup,
+        unitsNow: updatedGroup?.units ?? parsedUnits,
+        status: getStockStatus(updatedGroup?.units ?? parsedUnits),
+        totalUnitsAvailable: updatedStock?.totalUnitsAvailable ?? parsedUnits,
+        lastUpdated: updatedGroup?.lastUpdated ?? new Date()
+      }
     });
   } catch (error) {
     return res.status(500).json({
@@ -240,6 +304,13 @@ export const updateBloodStock = async (req, res) => {
       error: error.message
     });
   }
+};
+
+const getStockStatus = (units) => {
+  if (units < 5) return "CRITICAL";
+  if (units < 10) return "LOW";
+  if (units < 20) return "MEDIUM";
+  return "HEALTHY";
 };
 
 // ============= UPDATE BLOOD BANK =============

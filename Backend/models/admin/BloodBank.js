@@ -81,18 +81,6 @@ class BloodBank {
       facilities: bloodBankData.facilities || [],
       storageCapacity: bloodBankData.storageCapacity || 0, // in units
       
-      // Blood Stock (units available)
-      bloodStock: {
-        "O+": 0,
-        "O-": 0,
-        "A+": 0,
-        "A-": 0,
-        "B+": 0,
-        "B-": 0,
-        "AB+": 0,
-        "AB-": 0
-      },
-      
       // Admin Control Fields
       status: "PENDING", // PENDING | VERIFIED | REJECTED | SUSPENDED
       verificationStatus: {
@@ -125,7 +113,7 @@ class BloodBank {
       isActive: false, // Activated only after VERIFIED
       createdAt: new Date(),
       updatedAt: new Date(),
-      lastStockUpdate: new Date()
+      lastStockUpdate: null
     };
 
     const result = await collection.insertOne(newBloodBank);
@@ -238,55 +226,18 @@ class BloodBank {
   }
 
   /**
-   * READ - Get blood stock for a blood bank
+   * UPDATE - Touch stock timestamp (metadata only)
    */
-  async getBloodStock(id) {
+  async touchStockTimestamp(id) {
     const collection = this.getCollection();
     try {
-      const bloodBank = await collection.findOne({
-        _id: new ObjectId(id),
-        ...this.getBloodBankQuery()
-      });
-
-      if (!bloodBank) return null;
-
-      return {
-        bloodBankId: bloodBank._id,
-        organizationCode: bloodBank.organizationCode,
-        name: bloodBank.name,
-        bloodStock: bloodBank.bloodStock,
-        lastStockUpdate: bloodBank.lastStockUpdate,
-        storageCapacity: bloodBank.storageCapacity
-      };
-    } catch (error) {
-      console.error("Error getting blood stock:", error);
-      return null;
-    }
-  }
-
-  /**
-   * UPDATE - Blood Stock (add or reduce units)
-   * @param {string} id - Blood Bank ID
-   * @param {string} bloodGroup - Blood group (e.g., "O+")
-   * @param {number} units - Units to add (positive) or reduce (negative)
-   */
-  async updateBloodStock(id, bloodGroup, units) {
-    const collection = this.getCollection();
-    try {
-      const bloodBank = await this.findById(id);
-      if (!bloodBank) return false;
-
-      const currentStock = bloodBank.bloodStock[bloodGroup] || 0;
-      const newStock = Math.max(0, currentStock + units); // Prevent negative stock
-
       const result = await collection.updateOne(
-        { 
+        {
           _id: new ObjectId(id),
           ...this.getBloodBankQuery()
         },
-        { 
-          $set: { 
-            [`bloodStock.${bloodGroup}`]: newStock,
+        {
+          $set: {
             lastStockUpdate: new Date(),
             updatedAt: new Date()
           }
@@ -294,7 +245,7 @@ class BloodBank {
       );
       return result.modifiedCount > 0;
     } catch (error) {
-      console.error("Error updating blood stock:", error);
+      console.error("Error updating stock timestamp:", error);
       return false;
     }
   }
@@ -500,36 +451,43 @@ class BloodBank {
   async getStatsByLocation() {
     const collection = this.getCollection();
     try {
-      return await collection.aggregate([
-        { $match: this.getBloodBankQuery() },
-        {
-          $group: {
-            _id: {
-              state: "$address.state",
-              city: "$address.city"
-            },
-            count: { $sum: 1 },
-            verified: {
-              $sum: { $cond: [{ $eq: ["$status", "VERIFIED"] }, 1, 0] }
-            },
-            totalStock: {
-              $sum: {
-                $add: [
-                  "$bloodStock.O+",
-                  "$bloodStock.O-",
-                  "$bloodStock.A+",
-                  "$bloodStock.A-",
-                  "$bloodStock.B+",
-                  "$bloodStock.B-",
-                  "$bloodStock.AB+",
-                  "$bloodStock.AB-"
-                ]
+      return await collection
+        .aggregate([
+          { $match: this.getBloodBankQuery() },
+          {
+            $lookup: {
+              from: "blood_stock",
+              localField: "_id",
+              foreignField: "bloodBankId",
+              as: "stock"
+            }
+          },
+          {
+            $unwind: {
+              path: "$stock",
+              preserveNullAndEmptyArrays: true
+            }
+          },
+          {
+            $group: {
+              _id: {
+                state: "$address.state",
+                city: "$address.city"
+              },
+              count: { $sum: 1 },
+              verified: {
+                $sum: { $cond: [{ $eq: ["$status", "VERIFIED"] }, 1, 0] }
+              },
+              totalStock: {
+                $sum: {
+                  $ifNull: ["$stock.totalUnitsAvailable", 0]
+                }
               }
             }
-          }
-        },
-        { $sort: { count: -1 } }
-      ]).toArray();
+          },
+          { $sort: { count: -1 } }
+        ])
+        .toArray();
     } catch (error) {
       console.error("Error getting location stats:", error);
       return [];

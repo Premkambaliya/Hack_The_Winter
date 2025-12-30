@@ -1,6 +1,66 @@
 import { getDB } from "../../config/db.js";
 import { ObjectId } from "mongodb";
 
+const BLOOD_GROUPS = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
+const DEFAULT_INITIAL_UNITS = {
+  "O+": 8,
+  "O-": 5,
+  "A+": 10,
+  "A-": 6,
+  "B+": 9,
+  "B-": 4,
+  "AB+": 7,
+  "AB-": 3
+};
+
+const prepareStockEntries = (sourceStock = {}, fallbackUnits = {}, updatedBy = "system") => {
+  const now = new Date();
+  const entries = {};
+
+  BLOOD_GROUPS.forEach((group) => {
+    const rawValue = sourceStock[group];
+    const fallback = fallbackUnits[group] ?? 0;
+
+    let units = fallback;
+    let lastUpdated = now;
+    let updatedByValue = updatedBy;
+
+    if (typeof rawValue === "number") {
+      units = rawValue;
+    } else if (rawValue && typeof rawValue === "object") {
+      units = rawValue.units ?? fallback;
+      lastUpdated = rawValue.lastUpdated ? new Date(rawValue.lastUpdated) : now;
+      updatedByValue = rawValue.updatedBy || updatedBy;
+    }
+
+    entries[group] = {
+      units: Math.max(0, units),
+      lastUpdated,
+      updatedBy: updatedByValue
+    };
+  });
+
+  return entries;
+};
+
+const computeStockMeta = (stockEntries) => {
+  let totalUnits = 0;
+  let criticalCount = 0;
+
+  Object.values(stockEntries).forEach((entry) => {
+    totalUnits += entry.units;
+    if (entry.units < 5) criticalCount++;
+  });
+
+  return { totalUnits, criticalCount };
+};
+
+const getLatestUpdateAt = (stockEntries) => {
+  return Object.values(stockEntries).reduce((latest, entry) => {
+    return entry.lastUpdated > latest ? entry.lastUpdated : latest;
+  }, new Date(0));
+};
+
 /**
  * BloodStock Model
  * Manages blood inventory for blood banks
