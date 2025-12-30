@@ -230,41 +230,104 @@ export class HospitalController {
      * Update hospital
      * PUT /api/hospitals/:id
      */
+    /**
+     * Update hospital
+     * PUT /api/hospitals/:id
+     */
     static async updateHospital(req, res) {
         try {
             const { id } = req.params;
-            const updateData = req.body;
+            const { name, phone, address, city, state, pincode, ...otherData } = req.body;
 
-            // Remove fields that shouldn't be updated directly
-            delete updateData._id;
-            delete updateData.verificationStatus;
-            delete updateData.createdAt;
+            console.log('\n[UPDATE_HOSPITAL] Received ID:', id);
+            console.log('[UPDATE_HOSPITAL] Update Data:', req.body);
 
-            const success = await Hospital.updateById(id, updateData);
+            // Import getDB to access organizations collection
+            const { getDB } = await import("../../config/db.js");
+            const { ObjectId } = await import("mongodb");
+            const db = getDB();
 
-            if (!success) {
+            // Prepare update object with proper structure
+            const updateData = {};
+
+            // Update basic fields
+            if (name) updateData.name = name;
+            if (phone) updateData.phone = phone;
+
+            // Update location object fields
+            if (address) updateData['location.address'] = address;
+            if (city) {
+                updateData['location.city'] = city;
+                updateData.city = city; // Keep top-level city for compatibility
+            }
+            if (state) updateData['location.state'] = state;
+            if (pincode) updateData['location.pincode'] = pincode;
+
+            // Add any other fields (excluding immutable ones)
+            Object.keys(otherData).forEach(key => {
+                if (!['_id', 'verificationStatus', 'createdAt', 'type', 'organizationCode'].includes(key)) {
+                    updateData[key] = otherData[key];
+                }
+            });
+
+            // Add updatedAt timestamp
+            updateData.updatedAt = new Date();
+
+            console.log('[UPDATE_HOSPITAL] Sanitized Update Data:', updateData);
+
+            // Update in organizations collection
+            const result = await db.collection("organizations").updateOne(
+                { _id: new ObjectId(id), type: 'hospital' },
+                { $set: updateData }
+            );
+
+            console.log('[UPDATE_HOSPITAL] Update Result - Matched:', result.matchedCount, 'Modified:', result.modifiedCount);
+
+            if (result.matchedCount === 0) {
+                console.warn('[UPDATE_HOSPITAL] Hospital not found for ID:', id);
                 return res.status(404).json({
                     success: false,
                     message: "Hospital not found"
                 });
             }
 
-            const hospital = await Hospital.findById(id);
+            // Fetch updated hospital
+            const updatedOrganization = await db.collection("organizations").findOne({
+                _id: new ObjectId(id)
+            });
 
-            if (!hospital) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Hospital not found"
-                });
-            }
+            console.log('[UPDATE_HOSPITAL] Updated Hospital:', {
+                name: updatedOrganization?.name,
+                city: updatedOrganization?.location?.city,
+                address: updatedOrganization?.location?.address
+            });
+
+            // Map organization fields to hospital format for frontend compatibility
+            const hospitalData = {
+                _id: updatedOrganization._id,
+                hospitalCode: updatedOrganization.organizationCode,
+                name: updatedOrganization.name,
+                registrationNumber: updatedOrganization.registrationNumber || `REG-${updatedOrganization.organizationCode}`,
+                email: updatedOrganization.email,
+                phone: updatedOrganization.phone,
+                address: updatedOrganization.location?.address || updatedOrganization.address,
+                city: updatedOrganization.location?.city || updatedOrganization.city,
+                verificationStatus: updatedOrganization.verificationStatus || "PENDING",
+                isActive: updatedOrganization.isActive !== false,
+                location: updatedOrganization.location,
+                specialties: updatedOrganization.specialties || [],
+                createdAt: updatedOrganization.createdAt,
+                updatedAt: updatedOrganization.updatedAt,
+                verifiedAt: updatedOrganization.verifiedAt
+            };
 
             res.status(200).json({
                 success: true,
                 message: "Hospital updated successfully",
-                data: hospital
+                data: hospitalData
             });
         } catch (error) {
-            console.error("Error updating hospital:", error);
+            console.error("[UPDATE_HOSPITAL] Error updating hospital:", error);
             res.status(500).json({
                 success: false,
                 message: "Failed to update hospital",
