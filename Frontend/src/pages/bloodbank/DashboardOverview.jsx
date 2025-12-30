@@ -1,16 +1,11 @@
 import { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAllNgoDrives } from "../../services/bloodBankApi";
 import {
   getBloodBankRequestStats,
   getBloodBankRequests,
 } from "../../services/hospitalBloodRequestApi";
 import toast from "react-hot-toast";
-
-const quickActions = [
-  { label: "Create Request", icon: "🩸" },
-  { label: "Log Supply", icon: "📦" },
-  { label: "Schedule Drive", icon: "📅" },
-];
 
 const normalizeRequests = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -30,6 +25,33 @@ export default function DashboardOverview() {
   });
   const [requests, setRequests] = useState([]);
   const [ngoDrives, setNgoDrives] = useState([]);
+
+  const navigate = useNavigate();
+
+  const quickActions = [
+    { label: "Create Request", icon: "🩸", action: "request" },
+    { label: "Log Supply", icon: "📦", action: "supply" },
+    { label: "Schedule Drive", icon: "📅", action: "drive" },
+  ];
+
+  const handleQuickAction = (action) => {
+    switch (action) {
+      case "request":
+        navigate("/bloodbank/hospital-requests");
+        toast.success("Headed to Hospital Requests");
+        break;
+      case "supply":
+        navigate("/bloodbank/blood-stock");
+        toast.success("Opening Blood Stock");
+        break;
+      case "drive":
+        navigate("/bloodbank/ngo-drives");
+        toast.success("Opening NGO Drives");
+        break;
+      default:
+        break;
+    }
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -201,6 +223,7 @@ export default function DashboardOverview() {
           {quickActions.map((action) => (
             <button
               key={action.label}
+              onClick={() => handleQuickAction(action.action)}
               className="flex items-center gap-2 rounded-full border border-white/80 bg-white/80 px-4 py-2 text-sm font-semibold text-[#ff4d6d] shadow-[0_10px_25px_rgba(255,77,109,0.15)] hover:shadow-[0_15px_35px_rgba(255,77,109,0.25)] transition-all"
             >
               <span className="text-lg">{action.icon}</span>

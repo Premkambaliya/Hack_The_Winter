@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-import { getBloodStock } from "../../services/bloodBankApi";
+import { getBloodStock, updateBloodStock as updateBloodStockApi } from "../../services/bloodBankApi";
 import toast from "react-hot-toast";
 
 export default function BloodStock() {
   const [loading, setLoading] = useState(true);
   const [bloodStock, setBloodStock] = useState([]);
+  const [editUnits, setEditUnits] = useState({});
+  const [updatingGroup, setUpdatingGroup] = useState(null);
+  const [bloodBankId, setBloodBankId] = useState("");
 
   useEffect(() => {
     fetchBloodStock();
@@ -26,6 +29,8 @@ export default function BloodStock() {
         toast.error("Blood bank ID not found");
         return;
       }
+
+      setBloodBankId(bloodBankId);
 
       const response = await getBloodStock(bloodBankId);
       
@@ -57,9 +62,16 @@ export default function BloodStock() {
         );
 
         setBloodStock(formattedStock);
+        setEditUnits(
+          formattedStock.reduce((acc, entry) => {
+            acc[entry.bloodGroup] = entry.units;
+            return acc;
+          }, {})
+        );
       } else {
         // If no stock data, show empty state
         setBloodStock([]);
+        setEditUnits({});
       }
     } catch (error) {
       console.error("Error fetching blood stock:", error);
@@ -77,6 +89,64 @@ export default function BloodStock() {
       ]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditChange = (bloodGroup, value) => {
+    if (value === "" || /^[0-9\b]+$/.test(value)) {
+      setEditUnits((prev) => ({
+        ...prev,
+        [bloodGroup]: value === "" ? "" : Number(value),
+      }));
+    }
+  };
+
+  const handleUpdateUnits = async (bloodGroup) => {
+    if (!bloodBankId) {
+      toast.error("Blood bank ID missing");
+      return;
+    }
+
+    const unitsValue = editUnits[bloodGroup];
+    if (unitsValue === "" || unitsValue === undefined) {
+      toast.error("Please enter units");
+      return;
+    }
+
+    setUpdatingGroup(bloodGroup);
+    try {
+      const response = await updateBloodStockApi(bloodBankId, {
+        bloodGroup,
+        units: Number(unitsValue),
+      });
+
+      if (response.data?.success && response.data?.data) {
+        const { unitsNow, lastUpdated } = response.data.data;
+
+        setBloodStock((prev) =>
+          prev.map((entry) =>
+            entry.bloodGroup === bloodGroup
+              ? {
+                  ...entry,
+                  units: unitsNow,
+                  lastUpdated: new Date(lastUpdated).toLocaleString(),
+                }
+              : entry
+          )
+        );
+        setEditUnits((prev) => ({
+          ...prev,
+          [bloodGroup]: unitsNow,
+        }));
+        toast.success(`${bloodGroup} units updated`);
+      } else {
+        toast.error(response.data?.message || "Failed to update stock");
+      }
+    } catch (error) {
+      console.error("Error updating blood stock:", error);
+      toast.error(error.response?.data?.message || "Failed to update stock");
+    } finally {
+      setUpdatingGroup(null);
     }
   };
 
@@ -118,6 +188,7 @@ export default function BloodStock() {
                 <th className="px-6 py-4">Units Available</th>
                 <th className="px-6 py-4">Last Updated</th>
                 <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Update Units</th>
               </tr>
             </thead>
             <tbody>
@@ -146,6 +217,26 @@ export default function BloodStock() {
                         Adequate
                       </span>
                     )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        value={editUnits[stock.bloodGroup] ?? ""}
+                        onChange={(e) =>
+                          handleEditChange(stock.bloodGroup, e.target.value)
+                        }
+                        className="w-24 rounded-lg border border-pink-100 px-3 py-1 text-sm focus:border-[#ff4d6d] focus:outline-none focus:ring-2 focus:ring-[#ff4d6d]/20"
+                      />
+                      <button
+                        onClick={() => handleUpdateUnits(stock.bloodGroup)}
+                        disabled={updatingGroup === stock.bloodGroup}
+                        className="rounded-full bg-[#ff4d6d] px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-[#e0435f] disabled:cursor-not-allowed disabled:bg-[#f7a0b4]"
+                      >
+                        {updatingGroup === stock.bloodGroup ? "Saving..." : "Save"}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
