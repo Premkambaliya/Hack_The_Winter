@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { approvalService } from '../../services/adminService';
-import { Check, X, Eye, AlertCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, X, Eye, AlertCircle, Clock, ChevronLeft, ChevronRight, MapPin, Phone, Mail, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ApprovalsManagement() {
@@ -31,13 +31,39 @@ export default function ApprovalsManagement() {
           ? await approvalService.getAllPendingApprovals()
           : await approvalService.getPendingApprovals(filters.type);
 
-      setApprovals(response.data.data || []);
-      if (response.data.pagination) {
-        setPagination(response.data.pagination);
+      // Handle response structure: data contains { organizations, pagination, typeBreakdown }
+      const data = response.data.data || {};
+      const approvalsData = data.organizations || [];
+      
+      // Format the data to match expected structure
+      const formatted = approvalsData.map(org => ({
+        _id: org._id,
+        organizationName: org.name,
+        organizationCode: org.organizationCode,
+        type: org.type,
+        email: org.email,
+        phone: org.phone,
+        city: org.location?.city || 'N/A',
+        state: org.location?.state || 'N/A',
+        address: org.location?.address,
+        alternatePhone: org.alternatePhone,
+        createdAt: org.requestedAt || org.createdAt,
+        details: {
+          licenseNumber: org.licenseNumber,
+          registrationNumber: org.registrationCode,
+          contactPerson: org.contactPerson,
+          adminEmail: org.adminEmail,
+        }
+      }));
+      
+      setApprovals(formatted);
+      if (data.pagination) {
+        setPagination(data.pagination);
       }
     } catch (error) {
       toast.error('Failed to fetch approvals');
       console.error(error);
+      setApprovals([]);
     } finally {
       setLoading(false);
     }
@@ -52,10 +78,9 @@ export default function ApprovalsManagement() {
     }
   };
 
-  const viewDetails = async (approvalId) => {
+  const viewDetails = async (approval) => {
     try {
-      const response = await approvalService.getOrganizationDetails(approvalId);
-      setSelectedApproval(response.data.data);
+      setSelectedApproval(approval);
       setDetailsOpen(true);
     } catch (error) {
       toast.error('Failed to fetch approval details');
@@ -77,6 +102,7 @@ export default function ApprovalsManagement() {
       setActionModal(null);
       setActionData({ remarks: '', reason: '' });
       setDetailsOpen(false);
+      setSelectedApproval(null);
       fetchApprovals();
       fetchStats();
     } catch (error) {
@@ -99,6 +125,7 @@ export default function ApprovalsManagement() {
       setActionModal(null);
       setActionData({ remarks: '', reason: '' });
       setDetailsOpen(false);
+      setSelectedApproval(null);
       fetchApprovals();
       fetchStats();
     } catch (error) {
@@ -227,7 +254,7 @@ export default function ApprovalsManagement() {
 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => viewDetails(approval._id)}
+                    onClick={() => viewDetails(approval)}
                     className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition"
                     title="View Details"
                   >
@@ -265,7 +292,214 @@ export default function ApprovalsManagement() {
         )}
       </div>
 
-      {/* Action Modal - Approve */}
+      {/* Organization Details Modal */}
+      {detailsOpen && selectedApproval && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">{getTypeIcon(selectedApproval.type)}</span>
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedApproval.organizationName}</h2>
+                  <p className="text-blue-100 text-sm">Code: {selectedApproval.organizationCode}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDetailsOpen(false)}
+                className="hover:bg-blue-700 p-2 rounded-lg transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Organization Type Badge */}
+              <div className="mb-6">
+                <span className={`inline-block text-sm px-4 py-2 rounded-full font-semibold ${getTypeBadge(selectedApproval.type)}`}>
+                  {selectedApproval.type.charAt(0).toUpperCase() + selectedApproval.type.slice(1)}
+                </span>
+              </div>
+
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {/* Contact Information */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Mail size={18} />
+                    Contact Information
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-600">Email</p>
+                      <p className="text-gray-900 font-medium">{selectedApproval.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Phone</p>
+                      <p className="text-gray-900 font-medium">{selectedApproval.phone}</p>
+                    </div>
+                    {selectedApproval.alternatePhone && (
+                      <div>
+                        <p className="text-sm text-gray-600">Alternate Phone</p>
+                        <p className="text-gray-900 font-medium">{selectedApproval.alternatePhone}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Location Information */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <MapPin size={18} />
+                    Location
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-600">City</p>
+                      <p className="text-gray-900 font-medium">{selectedApproval.city}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">State/Province</p>
+                      <p className="text-gray-900 font-medium">{selectedApproval.state}</p>
+                    </div>
+                    {selectedApproval.address && (
+                      <div>
+                        <p className="text-sm text-gray-600">Address</p>
+                        <p className="text-gray-900 font-medium">{selectedApproval.address}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Details by Type */}
+              {selectedApproval.type === 'hospital' && selectedApproval.details && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Building2 size={18} />
+                    Hospital Details
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">License Number</p>
+                      <p className="text-gray-900 font-medium">{selectedApproval.details.licenseNumber || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Registration Number</p>
+                      <p className="text-gray-900 font-medium">{selectedApproval.details.registrationNumber || 'N/A'}</p>
+                    </div>
+                    {selectedApproval.details.beds && (
+                      <div>
+                        <p className="text-sm text-gray-600">Number of Beds</p>
+                        <p className="text-gray-900 font-medium">{selectedApproval.details.beds}</p>
+                      </div>
+                    )}
+                    {selectedApproval.details.departments && (
+                      <div>
+                        <p className="text-sm text-gray-600">Departments</p>
+                        <p className="text-gray-900 font-medium">{selectedApproval.details.departments}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedApproval.type === 'bloodbank' && selectedApproval.details && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Building2 size={18} />
+                    Blood Bank Details
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">License Number</p>
+                      <p className="text-gray-900 font-medium">{selectedApproval.details.licenseNumber || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Registration Number</p>
+                      <p className="text-gray-900 font-medium">{selectedApproval.details.registrationNumber || 'N/A'}</p>
+                    </div>
+                    {selectedApproval.details.serviceType && (
+                      <div>
+                        <p className="text-sm text-gray-600">Service Type</p>
+                        <p className="text-gray-900 font-medium">{selectedApproval.details.serviceType}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedApproval.type === 'ngo' && selectedApproval.details && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Building2 size={18} />
+                    NGO Details
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Registration Number</p>
+                      <p className="text-gray-900 font-medium">{selectedApproval.details.registrationNumber || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Mission</p>
+                      <p className="text-gray-900 font-medium">{selectedApproval.details.mission || 'N/A'}</p>
+                    </div>
+                    {selectedApproval.details.focusArea && (
+                      <div className="col-span-2">
+                        <p className="text-sm text-gray-600">Focus Area</p>
+                        <p className="text-gray-900 font-medium">{selectedApproval.details.focusArea}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Request Date */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-8">
+                <p className="text-sm text-gray-600">Requested On</p>
+                <p className="text-gray-900 font-medium">
+                  {new Date(selectedApproval.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDetailsOpen(false)}
+                  className="flex-1 bg-gray-300 text-gray-900 px-4 py-3 rounded-lg hover:bg-gray-400 transition font-medium"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setActionModal('approve');
+                    setActionData({ remarks: '', reason: '' });
+                  }}
+                  className="flex-1 bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-medium flex items-center justify-center gap-2"
+                >
+                  <Check size={18} />
+                  Approve
+                </button>
+                <button
+                  onClick={() => {
+                    setActionModal('reject');
+                    setActionData({ remarks: '', reason: '' });
+                  }}
+                  className="flex-1 bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition font-medium flex items-center justify-center gap-2"
+                >
+                  <X size={18} />
+                  Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {actionModal === 'approve' && selectedApproval && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">

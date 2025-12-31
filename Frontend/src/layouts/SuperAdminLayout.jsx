@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import {
   Menu,
@@ -16,7 +16,23 @@ import {
 
 export default function SuperAdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [adminName, setAdminName] = useState('Admin User');
   const location = useLocation();
+
+  useEffect(() => {
+    // Load admin name from localStorage
+    const savedName = localStorage.getItem('adminName') || 'Admin User';
+    setAdminName(savedName);
+
+    // Listen for profile updates
+    const handleProfileUpdate = () => {
+      const updatedName = localStorage.getItem('adminName') || 'Admin User';
+      setAdminName(updatedName);
+    };
+
+    window.addEventListener('adminProfileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('adminProfileUpdated', handleProfileUpdate);
+  }, []);
 
   const menuItems = [
     { name: 'Dashboard', path: '/superadmin', icon: LayoutDashboard },
@@ -127,10 +143,10 @@ export default function SuperAdminLayout() {
             {/* User Profile */}
             <div className="flex items-center gap-3 pl-6 border-l border-gray-200">
               <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center text-white font-semibold">
-                SA
+                {adminName.charAt(0).toUpperCase()}
               </div>
               <div className="hidden sm:block">
-                <p className="text-sm font-semibold text-gray-900">Super Admin</p>
+                <p className="text-sm font-semibold text-gray-900">{adminName}</p>
                 <p className="text-xs text-gray-500">System Administrator</p>
               </div>
             </div>
