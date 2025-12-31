@@ -35,6 +35,7 @@ import HospitalDetails from "./pages/superadmin/HospitalDetails";
 import NGOManagement from "./pages/superadmin/NGOManagement";
 import NGODetails from "./pages/superadmin/NGODetails";
 import BloodBankManagement from "./pages/superadmin/BloodBankManagement";
+import BloodBankDetails from "./pages/superadmin/BloodBankDetails";
 import BloodStockManagement from "./pages/superadmin/BloodStockManagement";
 import ApprovalsManagement from "./pages/superadmin/ApprovalsManagement";
 import AdminSettings from "./pages/superadmin/Settings";
@@ -144,6 +145,7 @@ export default function App() {
           <Route path="ngos" element={<NGOManagement />} />
           <Route path="ngo/:id" element={<NGODetails />} />
           <Route path="blood-banks" element={<BloodBankManagement />} />
+          <Route path="blood-bank/:id" element={<BloodBankDetails />} />
           <Route path="blood-stock" element={<BloodStockManagement />} />
           <Route path="approvals" element={<ApprovalsManagement />} />
           <Route path="settings" element={<AdminSettings />} />

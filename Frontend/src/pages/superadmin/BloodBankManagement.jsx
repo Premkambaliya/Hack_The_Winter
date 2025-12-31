@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { bloodBankService } from '../../services/adminService';
 import { Eye, Check, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function BloodBankManagement() {
+  const navigate = useNavigate();
   const [bloodBanks, setBloodBanks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBank, setSelectedBank] = useState(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchTimeoutRef = useRef(null);
   const [filters, setFilters] = useState({
     status: '',
     city: '',
@@ -21,11 +23,43 @@ export default function BloodBankManagement() {
     fetchBloodBanks();
   }, [filters]);
 
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      if (searchTerm.trim()) {
+        setFilters(prev => ({ ...prev, page: 1, limit: 100 }));
+      } else {
+        setFilters(prev => ({ ...prev, page: 1, limit: 10 }));
+      }
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [searchTerm]);
+
   const fetchBloodBanks = async () => {
     try {
       setLoading(true);
       const response = await bloodBankService.getAllBloodBanks(filters);
-      setBloodBanks(response.data.data.bloodBanks || []);
+      let fetchedBanks = response.data.data.bloodBanks || [];
+      
+      // Client-side filtering for search term
+      if (searchTerm.trim()) {
+        const lowerSearch = searchTerm.toLowerCase();
+        fetchedBanks = fetchedBanks.filter((bank) =>
+          bank.name?.toLowerCase().includes(lowerSearch) ||
+          bank.email?.toLowerCase().includes(lowerSearch) ||
+          bank.organizationCode?.toLowerCase().includes(lowerSearch) ||
+          bank.city?.toLowerCase().includes(lowerSearch) ||
+          bank.phone?.includes(lowerSearch)
+        );
+      }
+      
+      setBloodBanks(fetchedBanks);
       setPagination(response.data.data.pagination || {});
     } catch (error) {
       toast.error('Failed to fetch blood banks');
@@ -55,14 +89,8 @@ export default function BloodBankManagement() {
     }
   };
 
-  const viewDetails = async (bankId) => {
-    try {
-      const response = await bloodBankService.getBloodBankById(bankId);
-      setSelectedBank(response.data.data);
-      setDetailsOpen(true);
-    } catch (error) {
-      toast.error('Failed to fetch blood bank details');
-    }
+  const viewDetails = (bankId) => {
+    navigate(`/superadmin/blood-bank/${bankId}`);
   };
 
   const getStatusBadge = (status) => {
@@ -107,11 +135,9 @@ export default function BloodBankManagement() {
 
           <input
             type="text"
-            placeholder="Search by city..."
-            value={filters.city}
-            onChange={(e) =>
-              setFilters({ ...filters, city: e.target.value, page: 1 })
-            }
+            placeholder="Search by name, email or code..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
           />
 
@@ -124,19 +150,14 @@ export default function BloodBankManagement() {
           >
             <option value="">All Types</option>
             <option value="true">24x7 Emergency</option>
-            <option value="false">Regular Hours</option>
+            <option value="false">Regular</option>
           </select>
 
           <button
-            onClick={() =>
-              setFilters({
-                status: '',
-                city: '',
-                emergency24x7: '',
-                page: 1,
-                limit: 10,
-              })
-            }
+            onClick={() => {
+              setSearchTerm('');
+              setFilters({ status: '', city: '', emergency24x7: '', page: 1, limit: 10 });
+            }}
             className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
           >
             Reset Filters
@@ -220,23 +241,6 @@ export default function BloodBankManagement() {
                         >
                           <Eye size={18} />
                         </button>
-                        {bank.isActive ? (
-                          <button
-                            onClick={() => handleDeactivate(bank._id)}
-                            className="text-red-600 hover:text-red-800 transition"
-                            title="Deactivate"
-                          >
-                            <X size={18} />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleActivate(bank._id)}
-                            className="text-green-600 hover:text-green-800 transition"
-                            title="Activate"
-                          >
-                            <Check size={18} />
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -282,151 +286,6 @@ export default function BloodBankManagement() {
           </div>
         )}
       </div>
-
-      {/* Details Modal */}
-      {detailsOpen && selectedBank && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-red-600 to-red-700 text-white p-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">{selectedBank.name}</h2>
-              <button
-                onClick={() => setDetailsOpen(false)}
-                className="text-white hover:bg-red-700 p-2 rounded-lg transition"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-6 grid grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-4">
-                  Contact Information
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-500">Email</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedBank.email}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Phone</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedBank.phone}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Blood Bank Code</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedBank.organizationCode}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-4">
-                  Location Information
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-500">City</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedBank.city}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">State</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedBank.state}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Address</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedBank.address}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-4">
-                  Blood Bank Details
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-500">Type</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedBank.emergency24x7 ? '24x7 Emergency' : 'Regular Hours'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Status</p>
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
-                        selectedBank.status
-                      )}`}
-                    >
-                      {selectedBank.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-gray-600 mb-4">
-                  Status
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-500">Active</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedBank.isActive ? 'Yes' : 'No'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Registered On</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {new Date(selectedBank.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 border-t border-gray-200 p-6 flex gap-3">
-              <button
-                onClick={() => setDetailsOpen(false)}
-                className="flex-1 bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition font-medium"
-              >
-                Close
-              </button>
-              {selectedBank.isActive ? (
-                <button
-                  onClick={() => {
-                    handleDeactivate(selectedBank._id);
-                    setDetailsOpen(false);
-                  }}
-                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-medium"
-                >
-                  Deactivate
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    handleActivate(selectedBank._id);
-                    setDetailsOpen(false);
-                  }}
-                  className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium"
-                >
-                  Activate
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

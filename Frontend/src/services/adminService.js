@@ -121,18 +121,20 @@ export const bloodBankService = {
     if (filters.page) params.append('page', filters.page);
     if (filters.limit) params.append('limit', filters.limit);
     
-    return adminAPI.get(`/admin/blood-banks?${params.toString()}`);
+    return adminAPI.get(`/admin/bloodbanks/all?${params.toString()}`);
   },
   
-  getBloodBankById: (id) => adminAPI.get(`/admin/blood-banks/id/${id}`),
+  getBloodBankById: (id) => adminAPI.get(`/admin/bloodbanks/id/${id}`),
   
-  getBloodBankByCode: (code) => adminAPI.get(`/admin/blood-banks/code/${code}`),
+  getBloodBankByCode: (code) => adminAPI.get(`/admin/bloodbanks/code/${code}`),
   
-  activateBloodBank: (id) => adminAPI.post(`/admin/blood-banks/${id}/activate`),
+  getBloodBankRequests: (bankId) => adminAPI.get(`/admin/bloodbanks/${bankId}/requests`),
   
-  deactivateBloodBank: (id) => adminAPI.post(`/admin/blood-banks/${id}/deactivate`),
+  activateBloodBank: (id) => adminAPI.post(`/admin/bloodbanks/${id}/activate`),
   
-  updateBloodBank: (id, data) => adminAPI.put(`/admin/blood-banks/${id}`, data),
+  deactivateBloodBank: (id) => adminAPI.post(`/admin/bloodbanks/${id}/deactivate`),
+  
+  updateBloodBank: (id, data) => adminAPI.put(`/admin/bloodbanks/${id}`, data),
 };
 
 // ============= BLOOD STOCK MANAGEMENT =============
