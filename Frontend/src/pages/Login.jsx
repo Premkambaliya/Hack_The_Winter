@@ -99,7 +99,7 @@ export default function Login() {
                     <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                       <span className="text-2xl">🩸</span>
                     </div>
-                    <span className="text-2xl font-bold">BloodLink</span>
+                    <span className="text-2xl font-bold">SEBN</span>
                   </div>
                   <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-4">
                     Access Your Healthcare
@@ -157,7 +157,7 @@ export default function Login() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-sm text-gray-600 uppercase tracking-wide mb-2">Welcome Back</p>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-[#1F1F1F]">Login to BloodLink</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-[#1F1F1F]">Login to SEBN</h1>
                   </div>
                   <button
                     onClick={() => navigate("/")}

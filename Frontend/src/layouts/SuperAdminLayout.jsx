@@ -64,7 +64,7 @@ export default function SuperAdminLayout() {
         {/* Logo Area */}
         <div className="h-20 flex items-center justify-between px-4 border-b border-red-600">
           <div className={`font-bold text-xl ${!sidebarOpen && 'hidden'}`}>
-            BloodHub
+            SEBN
           </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -110,7 +110,8 @@ export default function SuperAdminLayout() {
         <div className="absolute bottom-6 left-0 right-0 px-2">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-600 hover:bg-opacity-50 transition text-red-100"
+            className="w-fit flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-600 hover:bg-opacity-50 transition text-red-100"
+
           >
             <LogOut size={20} />
             {sidebarOpen && <span className="text-sm font-medium">Logout</span>}

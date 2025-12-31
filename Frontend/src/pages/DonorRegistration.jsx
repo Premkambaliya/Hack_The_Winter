@@ -209,7 +209,7 @@ export default function DonorRegistration() {
                   <span className="text-2xl">🩸</span>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-[#7C1515]">BloodLink</h1>
+                  <h1 className="text-2xl font-bold text-[#7C1515]">SEBN</h1>
                   <p className="text-xs text-gray-600">Donor Registration</p>
                 </div>
               </div>

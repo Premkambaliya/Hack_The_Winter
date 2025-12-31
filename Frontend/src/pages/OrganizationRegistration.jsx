@@ -206,7 +206,7 @@ export default function OrganizationRegistration() {
                       <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                         <span className="text-2xl">🩸</span>
                       </div>
-                      <span className="text-2xl font-bold">BloodLink</span>
+                      <span className="text-2xl font-bold">SEBN</span>
                     </div>
                     <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-4">
                       Join the Network of

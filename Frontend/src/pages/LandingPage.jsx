@@ -121,7 +121,7 @@ export default function LandingPage() {
       name: "Dr. Priya Sharma",
       role: "Chief Medical Officer, City Hospital",
       image: "👩‍⚕️",
-      text: "BloodLink has revolutionized how we manage blood requests. Emergency response time reduced by 60%."
+      text: "SEBN has revolutionized how we manage blood requests. Emergency response time reduced by 60%."
     },
     {
       name: "Rahul Verma",
@@ -178,7 +178,7 @@ export default function LandingPage() {
                 <span className="text-2xl">🩸</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-[#7C1515]">BloodLink</h1>
+                <h1 className="text-2xl font-bold text-[#7C1515]">SEBN</h1>
                 <p className="text-xs text-gray-600">Save Lives Together</p>
               </div>
             </div>
@@ -214,17 +214,12 @@ export default function LandingPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-[#F9F4F4]">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-12">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7C1515]/10 border border-[#7C1515]/20 mb-6">
-              <span className="w-2 h-2 bg-[#7C1515] rounded-full animate-pulse"></span>
-              <span className="text-sm text-[#7C1515] font-semibold">🚨 1,247 lives saved this week</span>
-            </div>
 
             {/* Main Heading */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-[#1F1F1F]">
               Every Donation
               <br />
-              <span className="text-[#7C1515]">Saves Three Lives</span>
+              <span className="text-[#7C1515]">Saves Lives</span>
             </h1>
 
             {/* Subheading */}
@@ -356,7 +351,7 @@ export default function LandingPage() {
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-[#1F1F1F]">
-              Why Choose <span className="text-[#7C1515]">BloodLink?</span>
+              Why Choose <span className="text-[#7C1515]">SEBN?</span>
             </h2>
             <p className="text-gray-600 text-lg">
               Built with cutting-edge technology for seamless blood donation management
@@ -519,7 +514,7 @@ export default function LandingPage() {
                 <div className="w-10 h-10 bg-gradient-to-br from-[#7C1515] to-[#5A0E0E] rounded-xl flex items-center justify-center">
                   <span className="text-xl">🩸</span>
                 </div>
-                <span className="text-xl font-bold text-white">BloodLink</span>
+                <span className="text-xl font-bold text-white">SEBN</span>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed mb-4">
                 India's largest blood donation network. Connecting lives, one donation at a time.
@@ -627,7 +622,7 @@ export default function LandingPage() {
 
           {/* Bottom Bar */}
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
-            <p>© 2024 BloodLink. All rights reserved. Saving lives, one donation at a time.</p>
+            <p>© 2024 SEBN. All rights reserved. Saving lives, one donation at a time.</p>
           </div>
         </div>
       </footer>

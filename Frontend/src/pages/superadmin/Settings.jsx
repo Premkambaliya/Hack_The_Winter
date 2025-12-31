@@ -15,7 +15,7 @@ export default function AdminSettings() {
   useEffect(() => {
     // Get admin data from localStorage
     const adminName = localStorage.getItem('adminName') || 'Admin User';
-    const adminEmail = localStorage.getItem('adminEmail') || 'admin@bloodhub.com';
+    const adminEmail = localStorage.getItem('adminEmail') || 'admin@sebn.com';
     const adminPhone = localStorage.getItem('adminPhone') || '';
 
     const data = {

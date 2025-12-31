@@ -105,7 +105,7 @@ export default function RegistrationStatus() {
               <span className="text-2xl">🩸</span>
             </div>
             <div className="text-left">
-              <h1 className="text-3xl font-bold text-[#7C1515]">BloodLink</h1>
+              <h1 className="text-3xl font-bold text-[#7C1515]">SEBN</h1>
               <p className="text-xs text-gray-600">Registration Status</p>
             </div>
           </div>
@@ -257,7 +257,7 @@ export default function RegistrationStatus() {
                         🎉 Congratulations! Registration Approved
                       </h4>
                       <p className="text-green-700 mb-4">
-                        Your organization is now active and ready to use the BloodLink platform. You can login with your admin credentials.
+                        Your organization is now active and ready to use the SEBN platform. You can login with your admin credentials.
                       </p>
                       <div className="bg-white rounded-lg p-4 text-sm">
                         <p className="font-bold text-gray-800 mb-2">📝 Login Instructions:</p>

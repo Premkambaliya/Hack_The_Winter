@@ -139,7 +139,7 @@ export default function AdminLogin() {
                     id="email"
                     type="email"
                     name="email"
-                    placeholder="admin@bloodlink.com"
+                    placeholder="admin@sebn.com"
                     value={formData.email}
                     onChange={handleChange}
                     disabled={loading}
