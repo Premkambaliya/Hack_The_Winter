@@ -22,6 +22,7 @@ import HospitalBloodRequests from "./pages/hospital/BloodRequests";
 import HospitalNgoDrives from "./pages/hospital/NgoDrives";
 import HospitalAdminVerification from "./pages/hospital/AdminVerification";
 import HospitalProfile from "./pages/hospital/Profile";
+import SearchBlood from "./pages/hospital/SearchBlood";
 import NgoLayout from "./layouts/NgoLayout";
 import NgoOverview from "./pages/ngo/NgoDashboard";
 import NgoCamps from "./pages/ngo/CampManagement";
@@ -100,6 +101,7 @@ export default function App() {
           <Route path="blood-requests" element={<HospitalBloodRequests />} />
           <Route path="ngo-drives" element={<HospitalNgoDrives />} />
           <Route path="admin" element={<HospitalAdminVerification />} />
+          <Route path="search-blood" element={<SearchBlood />} />
           <Route path="profile" element={<HospitalProfile />} />
         </Route>
 
