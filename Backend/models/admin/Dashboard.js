@@ -225,6 +225,184 @@ class Dashboard {
     }
   }
 
+  // ============= GROWTH TRENDS (6 months) =============
+  async getGrowthTrends() {
+    const db = this.db();
+    const orgCollection = db.collection("organizations");
+
+    // Get data for last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const trends = await orgCollection.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+            type: "$type"
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { "_id.year": 1, "_id.month": 1 }
+      }
+    ]).toArray();
+
+    // Format data for last 6 months (if not enough historical data, use current counts)
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const month = date.toLocaleString('default', { month: 'short' });
+      const year = date.getFullYear();
+      const monthNum = date.getMonth() + 1;
+
+      const monthTrends = trends.filter(t => 
+        t._id.year === year && t._id.month === monthNum
+      );
+
+      months.push({
+        month,
+        hospitals: monthTrends.find(t => t._id.type === "hospital")?.count || 0,
+        ngos: monthTrends.find(t => t._id.type === "ngo")?.count || 0,
+        banks: monthTrends.find(t => t._id.type === "bloodbank")?.count || 0
+      });
+    }
+
+    return months;
+  }
+
+  // ============= BLOOD TYPE BREAKDOWN =============
+  async getBloodTypeBreakdown() {
+    const db = this.db();
+    const stockCollection = db.collection("blood_stock");
+
+    const breakdown = await stockCollection.aggregate([
+      {
+        $project: {
+          O_positive: "$bloodStock.O+.units",
+          O_negative: "$bloodStock.O-.units",
+          A_positive: "$bloodStock.A+.units",
+          A_negative: "$bloodStock.A-.units",
+          B_positive: "$bloodStock.B+.units",
+          B_negative: "$bloodStock.B-.units",
+          AB_positive: "$bloodStock.AB+.units",
+          AB_negative: "$bloodStock.AB-.units"
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          O_plus: { $sum: "$O_positive" },
+          O_minus: { $sum: "$O_negative" },
+          A_plus: { $sum: "$A_positive" },
+          A_minus: { $sum: "$A_negative" },
+          B_plus: { $sum: "$B_positive" },
+          B_minus: { $sum: "$B_negative" },
+          AB_plus: { $sum: "$AB_positive" },
+          AB_minus: { $sum: "$AB_negative" }
+        }
+      }
+    ]).toArray();
+
+    if (breakdown.length === 0) {
+      return [
+        { name: 'O+', units: 0 },
+        { name: 'O-', units: 0 },
+        { name: 'A+', units: 0 },
+        { name: 'A-', units: 0 },
+        { name: 'B+', units: 0 },
+        { name: 'B-', units: 0 },
+        { name: 'AB+', units: 0 },
+        { name: 'AB-', units: 0 }
+      ];
+    }
+
+    const result = breakdown[0];
+    return [
+      { name: 'O+', units: Math.max(0, result.O_plus || 0) },
+      { name: 'O-', units: Math.max(0, result.O_minus || 0) },
+      { name: 'A+', units: Math.max(0, result.A_plus || 0) },
+      { name: 'A-', units: Math.max(0, result.A_minus || 0) },
+      { name: 'B+', units: Math.max(0, result.B_plus || 0) },
+      { name: 'B-', units: Math.max(0, result.B_minus || 0) },
+      { name: 'AB+', units: Math.max(0, result.AB_plus || 0) },
+      { name: 'AB-', units: Math.max(0, result.AB_minus || 0) }
+    ];
+  }
+
+  // ============= ACTIVE USERS TRENDS =============
+  async getActiveUsersTrend() {
+    const db = this.db();
+    const userCollection = db.collection("organizationUsers");
+    const adminCollection = db.collection("admins");
+
+    // Get monthly user creation data for last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const userTrends = await userCollection.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { "_id.year": 1, "_id.month": 1 }
+      }
+    ]).toArray();
+
+    // Format data for last 6 months
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const month = date.toLocaleString('default', { month: 'short' });
+      const year = date.getFullYear();
+      const monthNum = date.getMonth() + 1;
+
+      const monthData = userTrends.find(t => 
+        t._id.year === year && t._id.month === monthNum
+      );
+
+      // Get total active users up to this month
+      const totalOrgUsers = await userCollection.countDocuments({
+        isActive: true,
+        createdAt: { $lte: new Date(year, monthNum - 1, 28) }
+      });
+
+      const totalAdmins = await adminCollection.countDocuments({
+        isActive: true,
+        createdAt: { $lte: new Date(year, monthNum - 1, 28) }
+      });
+
+      months.push({
+        month,
+        activeUsers: totalOrgUsers,
+        admins: totalAdmins,
+        newUsers: monthData?.count || 0
+      });
+    }
+
+    return months;
+  }
+
   // ============= COMPLETE DASHBOARD OVERVIEW =============
   async getCompleteOverview() {
     const [organizations, bloodStock, alerts, users, recentActivity, health] = await Promise.all([

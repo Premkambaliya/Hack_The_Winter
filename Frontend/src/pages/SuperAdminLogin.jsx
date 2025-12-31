@@ -46,7 +46,7 @@ export default function AdminLogin() {
       }
 
       // Call superadmin login API
-      const res = await axios.post("http://localhost:5000/api/superadmin/auth/login", formData);
+      const res = await axios.post("http://localhost:5000/api/admin/auth/login", formData);
 
       // Backend returns: { success, message, data: { token, admin: { email, adminCode, name, permissions, ... } } }
       if (res.data.success) {

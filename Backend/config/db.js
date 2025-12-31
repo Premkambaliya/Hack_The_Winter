@@ -7,7 +7,7 @@ let client;
 let db;
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017";
-const DB_NAME = process.env.DB_NAME || "sebn_db";
+const DB_NAME = process.env.DB_NAME || "hackthewinter";
 
 export const connectDB = async () => {
   try {

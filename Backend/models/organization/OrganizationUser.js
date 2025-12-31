@@ -197,17 +197,42 @@ class OrganizationUser {
   async findByUserEmail(organizationCode, email) {
     try {
       const collection = this.getCollection();
-
+      const lowerEmail = email.toLowerCase();
+      
+      console.log(`\n[DB_QUERY_PARAMS] Searching with:`, { organizationCode, lowerEmail });
+      console.log(`[DB_COLLECTION_NAME] Collection: ${this.collectionName}`);
+      
+      // First, let's see how many total users exist
+      const totalUsers = await collection.countDocuments({});
+      console.log(`[DB_TOTAL_USERS] Total users in collection: ${totalUsers}`);
+      
+      // Check how many users exist for this organization
+      const orgUsers = await collection.countDocuments({ organizationCode: organizationCode });
+      console.log(`[DB_ORG_USERS] Users in organization ${organizationCode}: ${orgUsers}`);
+      
+      // Check how many users have this email (across all orgs)
+      const emailUsers = await collection.countDocuments({ email: lowerEmail });
+      console.log(`[DB_EMAIL_USERS] Users with email ${lowerEmail} (any org): ${emailUsers}`);
+      
+      // Now do the actual query
+      console.log(`[DB_QUERY] Searching for email: ${lowerEmail}, organizationCode: ${organizationCode}`);
+      
       const user = await collection.findOne({
         organizationCode: organizationCode,
-        email: email.toLowerCase()
+        email: lowerEmail
       });
 
       if (!user) {
+        console.warn(`[DB_NOT_FOUND] No user found with email: ${lowerEmail} in organization: ${organizationCode}`);
+        
+        // Debug: Show what we actually have in this organization
+        const sampleUsers = await collection.find({ organizationCode: organizationCode }).limit(3).toArray();
+        console.log(`[DB_DEBUG] Sample users in org ${organizationCode}:`, sampleUsers.map(u => ({ userCode: u.userCode, email: u.email })));
+        
         throw new Error("User not found");
       }
 
-      console.log(`[DB_USER_FOUND_BY_EMAIL] ${user.userCode}`);
+      console.log(`[DB_USER_FOUND_BY_EMAIL] ${user.userCode} - Found user with email: ${user.email}`);
 
       // Return full user object including password for auth verification
       return user;

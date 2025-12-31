@@ -187,3 +187,78 @@ export const getSystemHealth = async (req, res) => {
     });
   }
 };
+
+/**
+ * GET /api/admin/dashboard/growth-trends
+ * Get organization growth trends (last 6 months)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const getGrowthTrends = async (req, res) => {
+  try {
+    const trends = await Dashboard.getGrowthTrends();
+
+    return res.status(200).json({
+      success: true,
+      message: "Growth trends retrieved successfully",
+      data: trends
+    });
+  } catch (error) {
+    console.error("Growth Trends Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve growth trends",
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/admin/dashboard/blood-types
+ * Get blood type breakdown/inventory
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const getBloodTypeBreakdown = async (req, res) => {
+  try {
+    const breakdown = await Dashboard.getBloodTypeBreakdown();
+
+    return res.status(200).json({
+      success: true,
+      message: "Blood type breakdown retrieved successfully",
+      data: breakdown
+    });
+  } catch (error) {
+    console.error("Blood Type Breakdown Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve blood type breakdown",
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/admin/dashboard/active-users
+ * Get active users trend (last 6 months)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const getActiveUsersTrend = async (req, res) => {
+  try {
+    const trend = await Dashboard.getActiveUsersTrend();
+
+    return res.status(200).json({
+      success: true,
+      message: "Active users trend retrieved successfully",
+      data: trend
+    });
+  } catch (error) {
+    console.error("Active Users Trend Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve active users trend",
+      error: error.message
+    });
+  }
+};

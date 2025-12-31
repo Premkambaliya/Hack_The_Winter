@@ -51,12 +51,24 @@ export default function Login() {
         return;
       }
 
+      // Log form data before sending
+      console.log("\n📋 [LOGIN_FORM_DATA] User submitted login form:");
+      console.log("   - Organization Code (Input):", formData.organizationCode);
+      console.log("   - Email (Input):", formData.email);
+      console.log("   - Password (Input):", formData.password ? "[PROVIDED]" : "[EMPTY]");
+
       // Call login API with organization code, email, and password
       const res = await loginUser(formData);
 
       // Backend returns: { success, message, token, user: { userCode, role, email, name, organizationCode, organizationType, ... } }
       if (res.data.success) {
         const { token, user } = res.data;
+
+        console.log("\n👤 [LOGIN_SUCCESS] Processing successful login:");
+        console.log("   - User Code:", user.userCode);
+        console.log("   - Role:", user.role);
+        console.log("   - Organization Type:", user.organizationType);
+        console.log("   - Token Saved:", token ? "✓" : "✗");
 
         // ✅ SAVE AUTH DATA using AuthContext
         login(user, token);
@@ -80,7 +92,10 @@ export default function Login() {
       }
 
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("\n❌ [LOGIN_CATCH_ERROR] Exception caught:", err.message);
+      console.error("   - Request Data Sent:", err.config?.data);
+      console.error("   - Response Status:", err.response?.status);
+      console.error("   - Response Data:", err.response?.data);
       
       // Handle validation errors from backend
       if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {

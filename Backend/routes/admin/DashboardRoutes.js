@@ -6,7 +6,10 @@ import {
   getAlertStats,
   getUserStats,
   getRecentActivity,
-  getSystemHealth
+  getSystemHealth,
+  getGrowthTrends,
+  getBloodTypeBreakdown,
+  getActiveUsersTrend
 } from "../../controllers/admin/DashboardController.js";
 import authMiddleware from "../../middleware/auth.middleware.js";
 import adminAuthMiddleware from "../../middleware/adminAuth.middleware.js";
@@ -69,5 +72,26 @@ router.get("/activity", authMiddleware, adminAuthMiddleware, getRecentActivity);
  * Returns: database connection status, all collections status and document counts
  */
 router.get("/health", authMiddleware, adminAuthMiddleware, getSystemHealth);
+
+/**
+ * GET /api/admin/dashboard/growth-trends
+ * Get organization growth trends for last 6 months
+ * Returns: array of monthly data with hospitals, ngos, banks counts
+ */
+router.get("/growth-trends", authMiddleware, adminAuthMiddleware, getGrowthTrends);
+
+/**
+ * GET /api/admin/dashboard/blood-types
+ * Get blood type inventory breakdown
+ * Returns: array of blood types with units available (O+, O-, A+, A-, B+, B-, AB+, AB-)
+ */
+router.get("/blood-types", authMiddleware, adminAuthMiddleware, getBloodTypeBreakdown);
+
+/**
+ * GET /api/admin/dashboard/active-users
+ * Get active users trend for last 6 months
+ * Returns: array of monthly data with active users and new users counts
+ */
+router.get("/active-users", authMiddleware, adminAuthMiddleware, getActiveUsersTrend);
 
 export default router;
